@@ -6,6 +6,7 @@ public class HomeWorkApp {
         checkSumSing(3, 5);
         printColor();
         compareNumbers();
+        printSquare();
     }
 
     public static void printThreeWords() {
@@ -40,6 +41,18 @@ public class HomeWorkApp {
             System.out.println("a >= b");
         } else {
             System.out.println("a < b");
+        }
+    }
+
+    public static void printSquare() {
+        for (int i = 0; i < 6; i++) {
+            for (int j = 0; j < 6; j++) {
+                if (i == 0 || i == 5 || j == 0 || j == 5) {
+                    System.out.print("0  ");
+                } else {
+                    System.out.print("*  ");
+                }
+            } System.out.println();
         }
     }
 }
