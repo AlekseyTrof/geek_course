@@ -1,4 +1,4 @@
-package course1.lesson3;
+package ru_geekbrains.course1.lesson3;
 
 /*
 Решение задачи в 3 домашке 8 задание
