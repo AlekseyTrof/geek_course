@@ -1,4 +1,4 @@
-package ru_geekbrains.course1.lesson2;
+package cource1.lesson2;
 
 public class HomeWorkApp_2 {
     public static void main(String[] args) {

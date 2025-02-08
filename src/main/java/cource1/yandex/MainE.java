@@ -1,4 +1,4 @@
-package ru_geekbrains.course1.yandex;
+package cource1.yandex;
 
 import java.io.*;
 

@@ -1,4 +1,4 @@
-package ru_geekbrains.course1.lesson6;
+package cource1.lesson6;
 
 public class Dog extends Animal {
     public static int countDog;
