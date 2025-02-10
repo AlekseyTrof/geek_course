@@ -1,4 +1,4 @@
-package ru_geekbrains.course1.lesson5;
+package cource1.lesson5;
 
 public class Worker {
     private String nameFull;
