@@ -28,16 +28,12 @@ public class Person implements Movable {
     }
 
     @Override
-    public void run(int distance) {
-        if (distance <= getMaxRun()) {
-            System.out.println(getName() + " пробежал " + distance + " м.");
-        }
+    public void run() {
+        System.out.println(getName() + " пробежал это расстояние и продолжает игру" );
     }
 
     @Override
-    public void jump(int height) {
-        if (height <= getMaxJump()) {
-            System.out.println(getName() + " перепрыгнул " + height + " м.");
-        }
+    public void jump() {
+        System.out.println(getName() + " перепрыгнул эту высоту и продолжает игру");
     }
 }
