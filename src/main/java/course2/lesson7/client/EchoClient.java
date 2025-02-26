@@ -45,7 +45,7 @@ public class EchoClient extends JFrame {
             try {
                 while (true) {
                     String messageFromServer = dataInputStream.readUTF();
-                    if (messageFromServer.equals("/end")) {
+                    if (messageFromServer.contains("/end")) {
                         break;
                     }
                     textArea.append(messageFromServer);

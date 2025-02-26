@@ -22,10 +22,10 @@ public class ClientHandler {
             this.out = new DataOutputStream(socket.getOutputStream());
             new Thread(() -> {
                 try {
-                    authentification();
+                    authentication();
                     readMessage();
                 } catch (IOException ex) {
-                    ex.printStackTrace();
+                    throw new RuntimeException("Соединение разорвано");
                 } finally {
                     closeConnection();
                 }
@@ -37,20 +37,22 @@ public class ClientHandler {
 
     // /auth login pass
 
-    private void authentification() throws IOException {
+    private void authentication() throws IOException {
         while (true) {
             String str = in.readUTF();
             if (str.startsWith(Constants.AUTH_COMMAND)) {
                 String[] tokens = str.split("\\s+");    //3
                 String nick = server.getAuthService().getNickByLoginAndPass(tokens[1], tokens[2]);
                 if (nick != null) {
-                    //Дописать проверку что такого ника нет в чате(*)
-                    //Авторизовались
-                    name = nick;
-                    sendMessage(Constants.AUTH_OK_COMMAND + " " + nick);
-                    server.broadcastMessage(nick + " вошел в чят");
-                    server.subscribe(this);
-                    return;
+                    if (!server.isNickBusy(nick)) {
+                        sendMessage("/authok " + nick);
+                        name = nick;
+                        server.broadcastMessage(name + " зашел в чат");
+                        server.subscribe(this);
+                        return;
+                    } else {
+                        sendMessage("Учетная запись уже используется");
+                    }
                 } else {
                     sendMessage("Неверные логин/пароль");
                 }
@@ -69,20 +71,23 @@ public class ClientHandler {
     private void readMessage() throws IOException {
         while (true) {
             String messageFromClient = in.readUTF();
-            //hint: можем получать команду
-
-
             System.out.println("Сообщение от " + name + ": " + messageFromClient);
             if (messageFromClient.equals(Constants.END_COMMAND)) {
-                break;
+                return;
             }
-            server.broadcastMessage(name + ": " + messageFromClient);
+            if (messageFromClient.contains(Constants.SEND_USER)) {
+                String[] stringsFromUser = messageFromClient.split("\\s+");
+                String nameWhoMessage = stringsFromUser[1];
+                server.sendOnlyOneUser(nameWhoMessage, name + "(личное): " + messageFromClient);
+            } else {
+                server.broadcastMessage(name + ": " + messageFromClient);
+            }
         }
     }
 
     private void closeConnection() {
         server.unsubscribe(this);
-        server.broadcastMessage(name + " вышел из чята");
+        server.broadcastMessage(name + " вышел из чата");
         try {
             in.close();
         } catch (IOException ex) {
@@ -98,5 +103,9 @@ public class ClientHandler {
         } catch (IOException ex) {
             //ignore
         }
+    }
+
+    public String getName() {
+        return name;
     }
 }
