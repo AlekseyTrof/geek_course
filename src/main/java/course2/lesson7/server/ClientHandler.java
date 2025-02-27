@@ -1,11 +1,13 @@
 package course2.lesson7.server;
 
+import course2.lesson7.client.MyClient;
 import course2.lesson7.constants.Constants;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.time.LocalTime;
 
 public class ClientHandler {
     private MyServer server;
@@ -13,6 +15,7 @@ public class ClientHandler {
     private DataInputStream in;
     private DataOutputStream out;
     private String name;
+    private boolean auth = false;
 
     public ClientHandler(MyServer server, Socket socket) {
         try {
@@ -35,17 +38,18 @@ public class ClientHandler {
         }
     }
 
-    // /auth login pass
-
+    //auth login pass
     private void authentication() throws IOException {
         while (true) {
+            checkAuth();
             String str = in.readUTF();
             if (str.startsWith(Constants.AUTH_COMMAND)) {
-                String[] tokens = str.split("\\s+");    //3
+                String[] tokens = str.split("\\s+");
                 String nick = server.getAuthService().getNickByLoginAndPass(tokens[1], tokens[2]);
                 if (nick != null) {
                     if (!server.isNickBusy(nick)) {
                         sendMessage("/authok " + nick);
+                        auth = true;
                         name = nick;
                         server.broadcastMessage(name + " зашел в чат");
                         server.subscribe(this);
@@ -78,11 +82,38 @@ public class ClientHandler {
             if (messageFromClient.contains(Constants.SEND_USER)) {
                 String[] stringsFromUser = messageFromClient.split("\\s+");
                 String nameWhoMessage = stringsFromUser[1];
-                server.sendOnlyOneUser(nameWhoMessage, name + "(личное): " + messageFromClient);
+                server.sendMessageToClient(nameWhoMessage, this, messageFromClient);
             } else {
                 server.broadcastMessage(name + ": " + messageFromClient);
             }
         }
+    }
+
+    /*
+    Отключение неавторизованных пользователей по тайм-ауту (120 секунд ждём после
+    подключения клиента и, если он не авторизовался за это время, закрываем соединение).
+     */
+    public void checkAuth() {
+        int start = LocalTime.now().toSecondOfDay();
+        Thread thread = new Thread(() -> {
+            while (true) {
+                int now = LocalTime.now().toSecondOfDay();
+                if (now - start > 120 && !auth) {
+                    try {
+                        socket.close();
+                        break;
+                    } catch (IOException e) {
+                        e.printStackTrace(); // Логируем ошибку
+                    }
+                }
+                try {
+                    Thread.sleep(1000); // Пауза в 1 секунду
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt(); // Восстанавливаем состояние прерывания
+                }
+            }
+        });
+        thread.start(); // Запускаем поток
     }
 
     private void closeConnection() {

@@ -1,6 +1,5 @@
 package course2.lesson7.server;
 
-import course2.lesson7.client.EchoClient;
 import course2.lesson7.constants.Constants;
 
 import java.io.IOException;
@@ -54,31 +53,48 @@ public class MyServer {
     }
 
     public synchronized void broadcastMessage(String message) {
-
         clients.forEach(client -> client.sendMessage(message));
-//        for (ClientHandler client : clients) {
-//            client.sendMessage(message);
-//        }
     }
 
-    public synchronized void sendOnlyOneUser(String nick, String message) {
+    public synchronized void broadcastClientsList() {
+        StringBuilder sb = new StringBuilder("/clients ");
+        for (ClientHandler o : clients) {
+            sb.append(o.getName() + " ");
+        }
+        broadcastMessage(sb.toString());
+    }
+
+    public synchronized void sendMessageToClient(String toNick, ClientHandler fromNick, String message) {
         for (ClientHandler client : clients) {
-            if (client.getName().equals(nick)) {
-                String mes = message.replace("/w ", "");
-                mes = mes.replace("nick1 ", "");
-                mes = mes.replace("nick2 ", "");
-                mes = mes.replace("nick3 ", "");
-                client.sendMessage(mes);
+            if (client.getName().equals(toNick)) {
+                String mes = message.replace("/w ", "").substring(5);
+                client.sendMessage("От " + fromNick.getName() + ": " + mes);
+                fromNick.sendMessage("Клиенту " + toNick + ": " + mes);
+                return;
             }
         }
+        fromNick.sendMessage("Участника с ником " + toNick + " нет в чат-комнате");
+    }
+
+    public synchronized void sendMessageToClient(String toNick, String fromNick, String message) {
+        for (ClientHandler client : clients) {
+            if (client.getName().equals(toNick)) {
+                String mes = message.replace("/w ", "").substring(5);
+                client.sendMessage("От " + fromNick + ": " + mes);
+                return;
+            }
+        }
+        System.out.println("Участника с ником " + toNick + " нет в чат-комнате");
     }
 
     public synchronized void subscribe(ClientHandler client) {
         clients.add(client);
+        broadcastClientsList();
     }
 
     public synchronized void unsubscribe(ClientHandler client) {
         clients.remove(client);
+        broadcastClientsList();
     }
 
     public synchronized boolean isNickBusy(String nick) {
@@ -95,11 +111,24 @@ public class MyServer {
             try {
                 while (true) {
                     String message = scanner.nextLine();
-                    if (!message.trim().isEmpty()) {
+                    if (!message.trim().isEmpty() && !message.startsWith("/")) {
                         broadcastMessage("Сервер: " + message);
+                    }
+                    if (message.startsWith("/clients")) {
+                        StringBuilder sb = new StringBuilder("/clients ");
+                        for (ClientHandler o : clients) {
+                            sb.append(o.getName() + " ");
+                        }
+                        System.out.println(sb);
+                    }
+                    if (message.startsWith("/w ")) {
+                        String[] toNick = message.split("\\s+");
+                        sendMessageToClient(toNick[1], "Сервер", message);
                     }
                     if (message.equalsIgnoreCase(Constants.END_COMMAND)) {
                         System.out.println("Соединение разорвано");
+                        broadcastMessage("/end");
+                        scanner.close();
                         break;
                     }
                 }
@@ -108,5 +137,4 @@ public class MyServer {
             }
         }).start();
     }
-
 }

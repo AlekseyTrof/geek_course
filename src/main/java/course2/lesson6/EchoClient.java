@@ -39,17 +39,17 @@ public class EchoClient extends JFrame {
             try {
                 while (true) {
                     String strFromServer = in.readUTF();
-                    if (strFromServer.equalsIgnoreCase("/end")) {
+                    if (strFromServer.contains("/end")) {
                         break;
                     }
-                    chatArea.append("Сервер: " + strFromServer);
-                    chatArea.append("\n");
+                    chatArea.append(strFromServer + "\n");
                 }
                 chatArea.append("Соединение разорвано");
+                out.writeUTF("/end");
                 msgInputField.setEnabled(false);
                 closeConnection();
             } catch (Exception e) {
-                e.printStackTrace();
+                throw new RuntimeException("Соединение разорвано");
             }
         }).start();
     }
@@ -73,12 +73,13 @@ public class EchoClient extends JFrame {
             e.printStackTrace();
         }
 
+        dispose(); // Закрываем текущее окно
+        System.exit(0); // Завершаем программу
     }
 
     public void sendMessage() {
         if (!msgInputField.getText().trim().isEmpty()) {
             try {
-                chatArea.append("Клиент: " + msgInputField.getText() + "\n");
                 out.writeUTF(msgInputField.getText());
                 msgInputField.setText("");
                 msgInputField.grabFocus();
@@ -119,12 +120,18 @@ public class EchoClient extends JFrame {
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
-                super.windowClosing(e);
-                try {
-                    out.writeUTF("/end");
-                    closeConnection();
-                } catch (IOException exception) {
-                    exception.printStackTrace();
+                // Здесь можно добавить логику, например, предупреждение пользователю
+                int response = JOptionPane.showConfirmDialog(null, "Вы действительно хотите выйти?",
+                        "Подтверждение выхода", JOptionPane.YES_NO_OPTION);
+                if (response == JOptionPane.YES_OPTION) {
+                    try {
+                        out.writeUTF("/end");
+                        closeConnection();
+                    } catch (IOException exception) {
+                        exception.printStackTrace();
+                    }
+                    dispose(); // Закрываем текущее окно
+                    System.exit(0); // Завершаем программу
                 }
             }
         });

@@ -27,17 +27,19 @@ public class EchoServer {
 
             while (true) {
                 String message = in.readUTF();
-                if (message.equalsIgnoreCase("/end")) {
+                if (message.contains("/end")) {
                     break;
                 } else {
                     System.out.println("Клиент написал: " + message);
+                    sendMessage("Клиент: " + message);
                 }
             }
             System.out.println("Соединение разорвано");
             out.writeUTF("/end");
-            closeConnection();
+            scanner.close();
+            socket.close();
         } catch (IOException e) {
-            e.printStackTrace();
+            System.err.println("Ошибка при подключении клиента: " + e.getMessage());
         }
     }
 
@@ -47,40 +49,17 @@ public class EchoServer {
                 while (true) {
                     String message = scanner.nextLine();
                     if (!message.trim().isEmpty()) {
-                        out.writeUTF(message);
-                    }
-                    if (message.equalsIgnoreCase("/end")) {
-                        System.out.println("Соединение разорвано");
-                        break;
+                        sendMessage("Сервер: " + message);
                     }
                 }
-                closeConnection();
             } catch (Exception e) {
-                e.printStackTrace();
+                throw new RuntimeException("Соединение разорвано");
             }
         }).start();
     }
-
-    public static void closeConnection() {
-        try {
-            in.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        try {
-            out.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        try {
-            socket.close();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        try {
-            scanner.close();
-        } catch (Exception e) {
-            e.printStackTrace();
+    public static void sendMessage(String message) throws IOException {
+        if (!message.trim().isEmpty()) {
+            out.writeUTF(message);
         }
     }
 }
