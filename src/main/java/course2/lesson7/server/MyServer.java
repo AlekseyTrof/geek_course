@@ -8,6 +8,7 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
+import java.util.stream.Collectors;
 
 
 public class MyServer {
@@ -57,11 +58,23 @@ public class MyServer {
     }
 
     public synchronized void broadcastClientsList() {
-        StringBuilder sb = new StringBuilder("/clients ");
+        StringBuilder sb = new StringBuilder(Constants.CLIENTS_LIST_COMMAND).append(" ");
         for (ClientHandler o : clients) {
-            sb.append(o.getName() + " ");
+            sb.append(o.getName()).append(" ");
         }
         broadcastMessage(sb.toString());
+    }
+
+    public synchronized String getActiveClients() {
+        StringBuilder sb = new StringBuilder(Constants.CLIENTS_LIST_COMMAND).append(" ");
+        sb.append(clients.stream()
+                .map(c -> c.getName())
+                .collect(Collectors.joining(" ")));
+
+//        for (ClientHandler o : clients) {
+//            sb.append(o.getName()).append(" ");
+//        }
+        return sb.toString();
     }
 
     public synchronized void sendMessageToClient(String toNick, ClientHandler fromNick, String message) {
@@ -115,15 +128,11 @@ public class MyServer {
                         broadcastMessage("Сервер: " + message);
                     }
                     if (message.startsWith("/clients")) {
-                        StringBuilder sb = new StringBuilder("/clients ");
-                        for (ClientHandler o : clients) {
-                            sb.append(o.getName() + " ");
-                        }
-                        System.out.println(sb);
+                        System.out.println(getActiveClients());
                     }
                     if (message.startsWith("/w ")) {
                         String[] toNick = message.split("\\s+");
-                        sendMessageToClient(toNick[1], "Сервер", message);
+                        sendMessageToClient(toNick[1], "Cервер", message);
                     }
                     if (message.equalsIgnoreCase(Constants.END_COMMAND)) {
                         System.out.println("Соединение разорвано");

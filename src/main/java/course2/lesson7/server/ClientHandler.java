@@ -1,6 +1,5 @@
 package course2.lesson7.server;
 
-import course2.lesson7.client.MyClient;
 import course2.lesson7.constants.Constants;
 
 import java.io.DataInputStream;
@@ -8,6 +7,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
 import java.time.LocalTime;
+import java.util.Optional;
 
 public class ClientHandler {
     private MyServer server;
@@ -45,12 +45,12 @@ public class ClientHandler {
             String str = in.readUTF();
             if (str.startsWith(Constants.AUTH_COMMAND)) {
                 String[] tokens = str.split("\\s+");
-                String nick = server.getAuthService().getNickByLoginAndPass(tokens[1], tokens[2]);
-                if (nick != null) {
-                    if (!server.isNickBusy(nick)) {
-                        sendMessage("/authok " + nick);
+                Optional<String> nick = server.getAuthService().getNickByLoginAndPass(tokens[1], tokens[2]);
+                if (nick.isPresent()) {
+                    if (!server.isNickBusy(nick.orElse(null))) {
+                        sendMessage("/authok " + nick.get());
                         auth = true;
-                        name = nick;
+                        name = nick.get();
                         server.broadcastMessage(name + " зашел в чат");
                         server.subscribe(this);
                         return;
@@ -79,7 +79,9 @@ public class ClientHandler {
             if (messageFromClient.equals(Constants.END_COMMAND)) {
                 return;
             }
-            if (messageFromClient.contains(Constants.SEND_USER)) {
+            if (messageFromClient.startsWith(Constants.CLIENTS_LIST_COMMAND)) {
+                sendMessage(server.getActiveClients());
+            } else if (messageFromClient.contains(Constants.SEND_USER)) {
                 String[] stringsFromUser = messageFromClient.split("\\s+");
                 String nameWhoMessage = stringsFromUser[1];
                 server.sendMessageToClient(nameWhoMessage, this, messageFromClient);
