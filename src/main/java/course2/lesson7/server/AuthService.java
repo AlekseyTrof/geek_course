@@ -17,7 +17,7 @@ public interface AuthService {
      * Получить никнейм по логину/паролю
      * @param login
      * @param pass
-     * @return никнейм если найден или null, если такого нет
+     * @return никнейм если найден
      */
-    String getNickByLoginAndPass(String login, String pass);
+    Optional<String> getNickByLoginAndPass(String login, String pass);
 }

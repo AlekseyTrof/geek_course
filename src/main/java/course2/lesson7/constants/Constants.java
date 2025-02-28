@@ -21,4 +21,6 @@ public class Constants {
     public static final String AUTH_OK_COMMAND = "/authok";
 
     public static final String SEND_USER = "/w";
+
+    public static final String CLIENTS_LIST_COMMAND = "/clients";
 }
