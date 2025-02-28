@@ -43,7 +43,7 @@ public class MyServer {
             }
 
         } catch (IOException ex) {
-            System.out.println("Ошибка в работе сервера.");
+            System.out.println("Ошибка в работе сервера");
             ex.printStackTrace();
         } finally {
             if (authService != null) {

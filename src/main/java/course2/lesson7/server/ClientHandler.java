@@ -28,7 +28,7 @@ public class ClientHandler {
                     authentication();
                     readMessage();
                 } catch (IOException ex) {
-                    throw new RuntimeException("Соединение разорвано");
+                    throw new RuntimeException("Соединение разорвано с пользователем");
                 } finally {
                     closeConnection();
                 }

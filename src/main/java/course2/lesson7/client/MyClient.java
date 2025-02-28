@@ -25,6 +25,7 @@ public class MyClient extends JFrame {
     private DataOutputStream dataOutputStream;
     private JTextField loginField;
     private JTextField passField;
+    private JButton button;
 
     public MyClient() {
         try {
@@ -50,10 +51,17 @@ public class MyClient extends JFrame {
                     textArea.append("\n");
                 }
                 textArea.append("Соединение разорвано");
+                textField.setDisabledTextColor(Color.RED);
+                textField.setText("Сервер отключился");
                 textField.setEnabled(false);
+                button.setEnabled(false);
                 closeConnection();
             } catch (Exception ex) {
-                ex.printStackTrace();
+                textField.setEnabled(false);
+                textField.setDisabledTextColor(Color.RED);
+                textField.setText("Вы отключились от чат-канала");
+                button.setEnabled(false);
+                throw new RuntimeException("Соединение потеряно");
             }
         }).start();
     }
@@ -87,12 +95,16 @@ public class MyClient extends JFrame {
             textField.grabFocus();
         }catch (Exception ex) {
             ex.printStackTrace();
+            textField.setEnabled(false);
+            textField.setDisabledTextColor(Color.RED);
+            textField.setText("Чат-канал заблокирован");
+            button.setEnabled(false);
         }
     }
 
     private void prepareUI() {
         setBounds(200, 200, 500, 500);
-        setTitle("EchoClient");
+        setTitle("Client chat");
         setDefaultCloseOperation(EXIT_ON_CLOSE);
 
         textArea = new JTextArea();
@@ -102,7 +114,7 @@ public class MyClient extends JFrame {
 
 
         JPanel panel = new JPanel(new BorderLayout());
-        JButton button = new JButton("Отправить");
+        button = new JButton("Отправить");
         panel.add(button, BorderLayout.EAST);
         textField = new JTextField();
         panel.add(textField, BorderLayout.CENTER);
@@ -122,7 +134,7 @@ public class MyClient extends JFrame {
             @Override
             public void focusGained(FocusEvent e) {
                 // Если текстовое поле содержит начальный текст, очищаем его
-                if (loginField.getText().equals("Логин")) {
+                if (loginField.getText().trim().equals("Логин")) {
                     loginField.setText("");
                 }
             }
@@ -130,7 +142,7 @@ public class MyClient extends JFrame {
             @Override
             public void focusLost(FocusEvent e) {
                 // Если текстовое поле пустое, восстанавливаем начальный текст
-                if (loginField.getText().isEmpty()) {
+                if (loginField.getText().trim().isEmpty()) {
                     loginField.setText("Логин");
                 }
             }
@@ -140,29 +152,36 @@ public class MyClient extends JFrame {
         SwingUtilities.invokeLater(() -> textField.requestFocusInWindow());
 
         passField.addFocusListener(new FocusListener() {
+
             @Override
             public void focusGained(FocusEvent e) {
-                if (passField.getText().equals("Пароль")) {
+                if (passField.getText().trim().equals("Пароль")) {
                     passField.setText("");
                 }
             }
-
             @Override
             public void focusLost(FocusEvent e) {
-                if (passField.getText().isEmpty()) {
+                if (passField.getText().trim().isEmpty()) {
                     passField.setText("Пароль");
                 }
             }
         });
 
-        authButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                try {
-                    dataOutputStream.writeUTF(Constants.AUTH_COMMAND +" " + loginField.getText() + " " + passField.getText());
-                } catch (IOException ioException) {
-                    ioException.printStackTrace();
-                }
+        passField.addActionListener(e -> {
+            try {
+                dataOutputStream.writeUTF(Constants.AUTH_COMMAND +" " + loginField.getText() + " " + passField.getText());
+            } catch (IOException ioException) {
+                ioException.printStackTrace();
+            }
+        });
+
+        authButton.addActionListener(e -> {
+            try {
+                dataOutputStream.writeUTF(Constants.AUTH_COMMAND +" " + loginField.getText() + " " + passField.getText());
+            } catch (IOException ioException) {
+                ioException.printStackTrace();
+            } finally {
+
             }
         });
 
