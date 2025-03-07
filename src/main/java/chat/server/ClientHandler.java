@@ -1,11 +1,12 @@
-package course2.lesson7.server;
+package chat.server;
 
-import course2.lesson7.constants.Constants;
+import chat.constants.Constants;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.sql.SQLException;
 import java.time.LocalTime;
 import java.util.Optional;
 
@@ -28,7 +29,7 @@ public class ClientHandler {
                     authentication();
                     readMessage();
                 } catch (IOException ex) {
-                    throw new RuntimeException("Соединение разорвано с пользователем");
+                    throw new RuntimeException("Соединение разорвано с пользователем " + name);
                 } finally {
                     closeConnection();
                 }
@@ -85,6 +86,11 @@ public class ClientHandler {
                 String[] stringsFromUser = messageFromClient.split("\\s+");
                 String nameWhoMessage = stringsFromUser[1];
                 server.sendMessageToClient(nameWhoMessage, this, messageFromClient);
+            } else if (messageFromClient.contains(Constants.SET_LOGIN)) {
+                String[] stringsFromUser = messageFromClient.split("\\s+");
+                server.setLoginOfClient(stringsFromUser[1], stringsFromUser[2]);
+                name = stringsFromUser[2];
+                server.broadcastMessage(stringsFromUser[1] + " сменил ник на " + stringsFromUser[2]);
             } else {
                 server.broadcastMessage(name + ": " + messageFromClient);
             }

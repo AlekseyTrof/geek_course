@@ -1,10 +1,11 @@
-package course2.lesson7.server;
+package chat.server;
 
-import course2.lesson7.constants.Constants;
+import chat.constants.Constants;
 
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
@@ -12,17 +13,10 @@ import java.util.stream.Collectors;
 
 
 public class MyServer {
-    /**
-     * Сервис аутентификации.
-     */
     private AuthService authService;
-
     private static Scanner scanner = new Scanner(System.in);
-    /**
-     * Активные клиента.
-     */
     private List<ClientHandler> clients;
-
+    private DbAuthServer dbAuth;
 
     public AuthService getAuthService() {
         return authService;
@@ -30,8 +24,10 @@ public class MyServer {
 
     public MyServer() {
         try (ServerSocket server = new ServerSocket(Constants.SERVER_PORT)) {
-            authService = new BaseAuthService();
-            authService.start();
+            authService = new DbAuthServer();
+            if (authService instanceof DbAuthServer) {
+                dbAuth = (DbAuthServer) authService;
+            }
 
             clients = new ArrayList<>();
             sendMessageFromConsole();
@@ -127,16 +123,41 @@ public class MyServer {
                     if (!message.trim().isEmpty() && !message.startsWith("/")) {
                         broadcastMessage("Сервер: " + message);
                     }
-                    if (message.startsWith("/clients")) {
+                    if (message.startsWith(Constants.CLIENTS_LIST_COMMAND)) {
                         System.out.println(getActiveClients());
                     }
-                    if (message.startsWith("/w ")) {
+                    if (message.startsWith(Constants.SEND_USER)) {
                         String[] toNick = message.split("\\s+");
                         sendMessageToClient(toNick[1], "Cервер", message);
                     }
+                    if (message.startsWith(Constants.ADD_CLIENT_TO_BASE)) {
+                        String[] msg = message.split("\\s+");
+                        dbAuth.insertOneClient(msg[1],msg[2]);
+                    }
+                    if (message.startsWith(Constants.DEL_CLIENT_FROM_BASE)) {
+                        String[] msg = message.split("\\s+");
+                        dbAuth.deleteClientFromBase(msg[1]);
+                    }
+                    if (message.startsWith(Constants.SET_LOGIN)) {
+                        String[] msg = message.split("\\s+");
+                        dbAuth.updateLoginOfClient(msg[1], msg[2]);
+                    }
+                    if (message.startsWith(Constants.DEL_CLIENT_FROM_BASE)) {
+                        String[] msg = message.split("\\s+");
+                        dbAuth.deleteClientFromBase(msg[1]);
+                    }
+                    if (message.startsWith(Constants.CLEAR_BASE)) {
+                        dbAuth.clearTableOfClients();
+                    }
+                    if (message.startsWith(Constants.DROP_BASE)) {
+                        dbAuth.dropTableClients();
+                    }
+                    if (message.startsWith(Constants.CREATE_TABLE)) {
+                        dbAuth.createTable();
+                    }
                     if (message.equalsIgnoreCase(Constants.END_COMMAND)) {
                         System.out.println("Соединение разорвано");
-                        broadcastMessage("/end");
+                        broadcastMessage(Constants.END_COMMAND);
                         scanner.close();
                         break;
                     }
@@ -145,5 +166,13 @@ public class MyServer {
                 e.printStackTrace();
             }
         }).start();
+    }
+
+    public void setLoginOfClient(String loginOld, String loginNew) {
+        try {
+            dbAuth.updateLoginOfClient(loginOld, loginNew);
+        } catch (SQLException e) {
+            throw new RuntimeException("Ошибка при изменении логина пользователя");
+        }
     }
 }

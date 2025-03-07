@@ -1,5 +1,6 @@
-package course2.lesson7.server;
+package chat.server;
 
+import java.sql.SQLException;
 import java.util.Optional;
 
 public interface AuthService {

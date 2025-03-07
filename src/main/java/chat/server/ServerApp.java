@@ -1,4 +1,4 @@
-package course2.lesson7.server;
+package chat.server;
 
 public class ServerApp {
 

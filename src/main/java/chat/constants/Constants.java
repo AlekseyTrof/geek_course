@@ -1,4 +1,4 @@
-package course2.lesson7.constants;
+package chat.constants;
 
 public class Constants {
     /**
@@ -23,4 +23,16 @@ public class Constants {
     public static final String SEND_USER = "/w";
 
     public static final String CLIENTS_LIST_COMMAND = "/clients";
+
+    public static final String ADD_CLIENT_TO_BASE = "/addC";
+
+    public static final String DEL_CLIENT_FROM_BASE = "/delC";
+
+    public static final String SET_LOGIN = "/setLog";
+
+    public static final String CLEAR_BASE = "/clearBD";
+
+    public static final String DROP_BASE = "/dropBD";
+
+    public static final String CREATE_TABLE = "/createT";
 }

@@ -1,6 +1,6 @@
-package course2.lesson7.client;
+package chat.client;
 
-import course2.lesson7.constants.Constants;
+import chat.constants.Constants;
 
 import java.awt.*;
 import java.awt.event.ActionEvent;
