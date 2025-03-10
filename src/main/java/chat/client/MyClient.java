@@ -8,10 +8,16 @@ import java.awt.event.ActionListener;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
+import java.io.BufferedWriter;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.Writer;
 import java.net.Socket;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.GregorianCalendar;
 
 import javax.swing.*;
 
@@ -26,6 +32,9 @@ public class MyClient extends JFrame {
     private JTextField loginField;
     private JTextField passField;
     private JButton button;
+    private String nameLog;
+    private final Calendar time = new GregorianCalendar();
+    private BufferedWriter writer;
 
     public MyClient() {
         try {
@@ -40,10 +49,12 @@ public class MyClient extends JFrame {
         socket = new Socket(Constants.SERVER_ADDRESS, Constants.SERVER_PORT);
         dataInputStream = new DataInputStream(socket.getInputStream());
         dataOutputStream = new DataOutputStream(socket.getOutputStream());
+
         new Thread(() -> {
             try {
                 while (true) {
                     String messageFromServer = dataInputStream.readUTF();
+                    writeLog(messageFromServer);
                     if (messageFromServer.contains("/end")) {
                         break;
                     }
@@ -112,7 +123,6 @@ public class MyClient extends JFrame {
         textArea.setLineWrap(true);
         add(new JScrollPane(textArea), BorderLayout.CENTER);
 
-
         JPanel panel = new JPanel(new BorderLayout());
         button = new JButton("Отправить");
         panel.add(button, BorderLayout.EAST);
@@ -169,7 +179,7 @@ public class MyClient extends JFrame {
 
         passField.addActionListener(e -> {
             try {
-                dataOutputStream.writeUTF(Constants.AUTH_COMMAND +" " + loginField.getText() + " " + passField.getText());
+                dataOutputStream.writeUTF(Constants.AUTH_COMMAND + " " + loginField.getText() + " " + passField.getText());
             } catch (IOException ioException) {
                 ioException.printStackTrace();
             }
@@ -177,11 +187,9 @@ public class MyClient extends JFrame {
 
         authButton.addActionListener(e -> {
             try {
-                dataOutputStream.writeUTF(Constants.AUTH_COMMAND +" " + loginField.getText() + " " + passField.getText());
+                dataOutputStream.writeUTF(Constants.AUTH_COMMAND + " " + loginField.getText() + " " + passField.getText());
             } catch (IOException ioException) {
                 ioException.printStackTrace();
-            } finally {
-
             }
         });
 
@@ -199,6 +207,13 @@ public class MyClient extends JFrame {
         });
 
         setVisible(true);
+    }
+
+    public void writeLog(String log) throws IOException {
+        nameLog = loginField.getText();
+        writer = new BufferedWriter(new FileWriter("history_" + nameLog + ".txt", true));
+        writer.write(time.getTime() + ": " + log + "\n");
+        writer.flush();
     }
 
     public static void main(String[] args) {
