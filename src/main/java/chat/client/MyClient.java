@@ -8,15 +8,17 @@ import java.awt.event.ActionListener;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.Writer;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.GregorianCalendar;
 
 import javax.swing.*;
@@ -55,6 +57,9 @@ public class MyClient extends JFrame {
                 while (true) {
                     String messageFromServer = dataInputStream.readUTF();
                     writeLog(messageFromServer);
+                    if (messageFromServer.startsWith(Constants.AUTH_COMMAND)) {
+                        displayMessagesFromArchive();
+                    }
                     if (messageFromServer.contains("/end")) {
                         break;
                     }
@@ -210,10 +215,40 @@ public class MyClient extends JFrame {
     }
 
     public void writeLog(String log) throws IOException {
-        nameLog = loginField.getText();
-        writer = new BufferedWriter(new FileWriter("history_" + nameLog + ".txt", true));
+        nameLog ="history_" +  loginField.getText() + ".txt";
+        writer = new BufferedWriter(new FileWriter(nameLog, true));
         writer.write(time.getTime() + ": " + log + "\n");
         writer.flush();
+    }
+
+    public List<String> loadLastMessages(int numberOfMessages) {
+        List<String> messages = new ArrayList<>();
+
+        try (BufferedReader reader = new BufferedReader(new FileReader(nameLog))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                messages.add(line);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        // Проверяем, сколько сообщений у нас есть, и берем последние сообщения в правильном порядке
+        // Math.max(0, ...): Эта функция используется для гарантии того,
+        // что startIndex не будет отрицательным.
+        // Если бы количество сообщений было меньше,
+        // чем numberOfMessages (например, у вас 3 сообщения, а вы хотите получить 10),
+        // это выражение вернет 0, что позволит избежать отрицательного индекса.
+        int startIndex = Math.max(0, messages.size() - numberOfMessages);
+        return messages.subList(startIndex, messages.size());
+    }
+
+    // Метод для отображения сообщений в поле
+    public void displayMessagesFromArchive() {
+        List<String> lastMessages = loadLastMessages(10);
+        for (String message : lastMessages) {
+            textArea.append(message + "\n"); // Здесь вы можете заменить вывод на отображение в интерфейсе
+        }
     }
 
     public static void main(String[] args) {
