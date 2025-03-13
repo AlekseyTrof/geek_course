@@ -1,4 +1,4 @@
-package course1.yandex;
+package course0.yandex;
 
 import java.io.*;
 

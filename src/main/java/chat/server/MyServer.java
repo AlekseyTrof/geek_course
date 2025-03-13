@@ -10,9 +10,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 import java.util.stream.Collectors;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 
 
 public class MyServer {
+    private static final Logger LOGGER = LogManager.getLogger(MyServer.class);
     private AuthService authService;
     private static Scanner scanner = new Scanner(System.in);
     private List<ClientHandler> clients;
@@ -35,6 +39,7 @@ public class MyServer {
             while (true) {
                 System.out.println("Сервер ожидает подключения");
                 Socket socket = server.accept();
+                LOGGER.info(socket);
                 System.out.println("Клиент подключился");
                 new ClientHandler(this, socket);
             }
